@@ -139,12 +139,19 @@
   .lock{display:flex; justify-content:center; gap:6px; margin:18px 0; flex-wrap:nowrap;}
   .lock input{flex:1 1 0; min-width:0; max-width:46px; height:58px; text-align:center; font-size:24px; font-weight:800; background:#fff; color:var(--ink); border:2px solid var(--line); border-radius:16px;}
   .lock input:focus{outline:none; border-color:var(--accent);}
+  #resumed{display:none; text-align:center; font-size:13px; font-weight:700; color:#fff; background:var(--grad);
+           border-radius:999px; padding:9px 14px; margin-bottom:10px; transition:opacity .8s;}
+  #resetbar{text-align:center; margin-top:22px;}
+  #resetbar button{background:none; border:none; color:var(--muted); font-size:12.5px; text-decoration:underline;
+                   opacity:.65; cursor:pointer; font-family:inherit; padding:6px 10px;}
   .final-gift{text-align:center;} .final-gift .big-emo{font-size:64px;}
   .confetti{font-size:22px; letter-spacing:4px; text-align:center;}
 </style>
 </head>
 <body>
 <div id="app">
+
+  <div id="resumed">🐾 Продолжаем с того места, где ты остановилась</div>
 
   <section class="screen active" id="s-intro">
     <div class="paws">🐾 🐾 🐾</div>
@@ -323,7 +330,42 @@ const GAMES=[
   {key:'millionaire',digit:6},{key:'quiz',digit:9}
 ];
 const LOCK_CODE=GAMES.map(g=>g.digit).join('');
-const state={digits:{}};
+/* ===== СОХРАНЕНИЕ ПРОГРЕССА (2026-07-23) =====
+   Мама закрывала вкладку — и всё начиналось заново. Теперь прогресс лежит
+   в localStorage и восстанавливается при открытии: собранные цифры, экран,
+   на котором она остановилась, номер слова/вопроса и заполненные клетки
+   судоку и кроссворда. localStorage обёрнут в try/catch: в приватном режиме
+   Safari он бросает исключение, и игра должна пережить это молча. */
+const SAVE_KEY='kvest-progress-v1';
+const state={digits:{}, screen:'s-intro', wIdx:0, zLevel:0, mi:0, qi:0, grids:{}};
+function saveState(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY); if(!raw) return false;
+    const d=JSON.parse(raw); if(!d || typeof d!=='object') return false;
+    Object.assign(state, d);
+    if(!state.digits || typeof state.digits!=='object') state.digits={};
+    if(!state.grids  || typeof state.grids !=='object') state.grids={};
+    return true;
+  }catch(e){ return false; }
+}
+function resetProgress(){
+  if(!confirm('Стереть весь прогресс и начать квест сначала?')) return;
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+  location.reload();
+}
+/* запоминаем клетку сетки (судоку/кроссворд), чтобы не заполнять заново */
+function rememberCell(game,id,val){
+  if(!state.grids[game]) state.grids[game]={};
+  if(val) state.grids[game][id]=val; else delete state.grids[game][id];
+  saveState();
+}
+function restoreCells(game){
+  const g=state.grids[game]; if(!g) return;
+  for(const id in g){ const el=document.getElementById(id); if(el) el.value=g[id]; }
+}
 
 /* ===== схематичный цвергпинчер (чёрно-рыжий, стоячие уши) ===== */
 const DOG_SVG=`<svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" aria-label="Рита, цвергпинчер">
@@ -385,9 +427,13 @@ function go(id){
   if(id==='s-millionaire') startMillionaire();
   if(id==='s-quiz') startQuiz();
   if(id==='s-lock') buildLock();
+  if(id==='s-sudoku') restoreCells('sudoku');
+  if(id==='s-crossword') restoreCells('crossword');
+  state.screen=id; saveState();
 }
 function award(key,elId,digitElId,doneId,fbId,msg){
   state.digits[key]=GAMES.find(g=>g.key===key).digit;
+  saveState();
   const fb=document.getElementById(fbId); fb.textContent=msg; fb.className='feedback ok';
   document.getElementById(digitElId).textContent=state.digits[key];
   document.getElementById(doneId).style.display='block';
@@ -420,7 +466,7 @@ KB_ROWS.forEach((row,i)=>{const div=document.createElement('div');div.className=
 function wNorm(s){return s.toUpperCase().replace(/Ё/g,'Е');}
 function wType(ch){if(wDone||wCol>=5)return;document.getElementById('w'+wRow+wCol).textContent=ch;wCol++;}
 function wBack(){if(wDone||wCol<=0)return;wCol--;document.getElementById('w'+wRow+wCol).textContent='';}
-function startWordle(){wIdx=0;loadWord();}
+function startWordle(){wIdx=state.wIdx||0;loadWord();}
 function loadWord(){
   WANSWER=WORDS[wIdx].w; wRow=0; wCol=0; wDone=false;
   document.getElementById('w-round').textContent='Слово '+(wIdx+1)+' из '+WORDS.length;
@@ -431,7 +477,7 @@ function loadWord(){
 function wNextOrDone(msg){
   if(wIdx<WORDS.length-1){
     const fb=document.getElementById('wfb'); fb.textContent=msg+' → следующее слово'; fb.className='feedback ok';
-    setTimeout(()=>{wIdx++;loadWord();},1300);
+    setTimeout(()=>{wIdx++; state.wIdx=wIdx; saveState(); loadWord();},1300);
   }else{
     award('wordle','wfb','w-digit','w-done','wfb','Все три слова взяты! 🎉');
   }
@@ -498,7 +544,7 @@ function buildSudoku(){
     if(isGiven(r,c)){cell.classList.add('given');cell.textContent=SUD_SOL[r][c];}
     else{
       const inp=document.createElement('input');inp.inputMode='numeric';inp.maxLength=1;inp.id='s'+r+c;
-      inp.oninput=()=>{inp.value=inp.value.replace(/[^1-6]/g,'');};
+      inp.oninput=()=>{inp.value=inp.value.replace(/[^1-6]/g,''); rememberCell('sudoku',inp.id,inp.value);};
       cell.appendChild(inp);
     }
     g.appendChild(cell);
@@ -533,7 +579,7 @@ const ZLEVELS=[
   // 3: ещё сложнее
   {colors:6, pool:28, start:11, speed:32, spawnGap:0.40}
 ];
-let zLevel=0;
+let zLevel=state.zLevel||0;
 let zc,zctx,zW,zH,zCx,zCy;
 let zPath=[], zPathLen=0;
 let zTrain=[];
@@ -754,11 +800,11 @@ function zStop(){ zRun=false; cancelAnimationFrame(zRAF); }
 function zumaWin(){
   zStop();
   if(zLevel<2){
-    zLevel++;
+    zLevel++; state.zLevel=zLevel; saveState();
     const fb=document.getElementById('zuma-fb'); fb.textContent='Уровень пройден! Дальше сложнее 🐾'; fb.className='feedback ok';
     setTimeout(startZuma,1200);
   }else{
-    zLevel=0;
+    zLevel=0; state.zLevel=0; saveState();
     award('zuma','zuma-fb','zuma-digit','zuma-done','zuma-fb','Все 3 уровня взяты! Рита горда 🐕🎉');
   }
 }
@@ -804,7 +850,7 @@ const QUIZ=[
 const QOPTS=['Наташа','Юля','Рита'];
 let qi=0, qAnswered=false, qPick=new Set();
 function startQuiz(){
-  qi=0;
+  qi=state.qi||0;
   document.getElementById('quiz-done').style.display='none';
   document.getElementById('quiz-fb').textContent='';
   document.getElementById('quiz-fb').className='feedback';
@@ -847,7 +893,7 @@ function submitQuiz(){
   fb.className='feedback '+(ok?'ok':'no');
   document.getElementById('quiz-go').disabled=true;
   setTimeout(()=>{
-    qi++;
+    qi++; state.qi=qi; saveState();
     if(qi<QUIZ.length) renderQuiz();
     else{
       document.getElementById('quiz-q').textContent='';
@@ -893,7 +939,7 @@ function buildCrossword(){
       cell.className='xcell';
       if(XNUM[key]){const n=document.createElement('span');n.className='xnum';n.textContent=XNUM[key];cell.appendChild(n);}
       const inp=document.createElement('input');inp.maxLength=1;inp.id='x'+key;inp.autocomplete='off';
-      inp.oninput=()=>{inp.value=inp.value.replace(/[^А-Яа-яЁё]/g,'').toUpperCase();};
+      inp.oninput=()=>{inp.value=inp.value.replace(/[^А-Яа-яЁё]/g,'').toUpperCase(); rememberCell('crossword',inp.id,inp.value);};
       cell.appendChild(inp);
     }else{cell.className='xcell blank';}
     g.appendChild(cell);
@@ -965,7 +1011,7 @@ let mi=0, mAnswered=false;
 let mLife={ff:true, friend:true, poll:true};
 
 function startMillionaire(){
-  mi=0; mAnswered=false;
+  mi=state.mi||0; mAnswered=false;
   mLife={ff:true, friend:true, poll:true};
   document.getElementById('m-restart').style.display='none';
   document.getElementById('m-done').style.display='none';
@@ -975,7 +1021,7 @@ function startMillionaire(){
   renderMill();
 }
 function millRetry(){
-  mi=safeCheckpoint();
+  mi=safeCheckpoint(); state.mi=mi; saveState();
   mLife={ff:true, friend:true, poll:true};   // на новом заходе подсказки снова при тебе
   document.getElementById('m-restart').style.display='none';
   document.getElementById('m-fb').textContent='';
@@ -1061,7 +1107,7 @@ function answerMill(idx,btn){
   const btns=[...document.querySelectorAll('#m-opts .mopt')];
   if(idx===Q.correct){
     btn.classList.add('correct');
-    setTimeout(()=>{mi++; if(mi<MILL.length)renderMill(); else millWin();},850);
+    setTimeout(()=>{mi++; state.mi=mi; saveState(); if(mi<MILL.length)renderMill(); else millWin();},850);
   }else{
     btn.classList.add('wrong');
     const right=btns.find(b=>+b.dataset.idx===Q.correct);
@@ -1105,6 +1151,37 @@ function checkLock(){
   if(code===LOCK_CODE){fb.textContent='Открыто! 🔓';fb.className='feedback ok';setTimeout(()=>go('s-win'),700);}
   else{fb.textContent='Не тот код. Цифры — на подносе ☝️';fb.className='feedback no';}
 }
+
+/* экран → ключ игры и элементы блока «твоя цифра / дальше» */
+const SCREEN_GAME={
+  's-wordle':     ['wordle',     'w-digit',     'w-done'],
+  's-rebus':      ['rebus',      'rebus-digit', 'rebus-done'],
+  's-cipher':     ['cipher',     'cipher-digit','cipher-done'],
+  's-sudoku':     ['sudoku',     'sudoku-digit','sudoku-done'],
+  's-crossword':  ['crossword',  'cross-digit', 'cross-done'],
+  's-zuma':       ['zuma',       'zuma-digit',  'zuma-done'],
+  's-millionaire':['millionaire','m-digit',     'm-done'],
+  's-quiz':       ['quiz',       'quiz-digit',  'quiz-done']
+};
+
+/* ===== ВОССТАНОВЛЕНИЕ ПРИ ОТКРЫТИИ ===== */
+(function resume(){
+  if(!loadState()) return;                       // играем впервые — обычное интро
+  const id=state.screen;
+  if(!id || id==='s-intro' || !document.getElementById(id)) return;
+  go(id);
+  // уровень был пройден, но «Дальше» не нажато — возвращаем цифру и кнопку
+  const m=SCREEN_GAME[id];
+  if(m && state.digits[m[0]]!=null){
+    const d=document.getElementById(m[1]), done=document.getElementById(m[2]);
+    if(d) d.textContent=state.digits[m[0]];
+    if(done) done.style.display='block';
+  }
+  const note=document.getElementById('resumed');
+  if(note){ note.style.display='block';
+    setTimeout(()=>{ note.style.opacity='0';
+      setTimeout(()=>{ note.style.display='none'; }, 900); }, 4000); }
+})();
 </script>
 </body>
 </html>
