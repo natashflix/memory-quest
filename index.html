@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Квест для мамы 🐾</title>
+<style>
+  :root{
+    --bg1:#fff1e8; --bg2:#ffe9ef; --bg3:#f3ecff;
+    --card:#ffffff; --ink:#241a2e; --muted:#6b6275;
+    --accent:#f2607f; --accent2:#ff8a5c; --grad:linear-gradient(135deg,#ff8a5c,#f2607f);
+    --line:#efe9f2; --soft:#faf6ff;
+    --ok:#2fa36b; --near:#f0b429; --miss:#b8b0c0;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 52%,var(--bg3) 100%);
+    background-attachment:fixed;
+    color:var(--ink); min-height:100vh;
+    display:flex; justify-content:center; align-items:flex-start;
+  }
+  #app{width:100%; max-width:460px; min-height:100vh; padding:18px 16px 40px; position:relative;}
+  .screen{display:none; animation:fade .35s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+  .paws{font-size:12px; letter-spacing:3px; font-weight:700; text-align:center; color:var(--accent); margin-bottom:10px; min-height:18px;}
+  .card{background:var(--card); border:none; border-radius:26px; padding:24px 20px;
+        box-shadow:0 1px 2px rgba(60,30,20,.04), 0 8px 20px rgba(60,30,20,.07), 0 24px 48px rgba(60,30,20,.05);}
+  h1{font-size:26px; font-weight:800; letter-spacing:-.02em; line-height:1.2; margin:.2em 0 .5em; text-align:center;}
+  h2{font-size:22px; font-weight:800; letter-spacing:-.02em; margin:.1em 0 .5em;}
+  p{font-size:16px; line-height:1.55; margin:.5em 0; color:var(--muted);}
+  .rita{display:flex; gap:10px; align-items:flex-start; background:var(--soft); border-radius:18px; padding:13px 15px; margin:12px 0;}
+  .rita .face{font-size:30px; line-height:1;}
+  .rita .face{width:56px; flex-shrink:0;}
+  .rita .face svg{width:56px; height:auto; display:block;}
+  .zend svg{width:56px; height:auto;}
+  .rita .bubble{font-size:14.5px; line-height:1.55; color:#5b5168;}
+  .hint{font-size:14px; line-height:1.5; color:var(--muted); background:var(--soft); border-radius:14px; padding:11px 13px; margin:10px 0;}
+  button.big{display:block; width:100%; border:none; border-radius:999px; padding:17px; background:var(--grad); color:#fff;
+             font-size:18px; font-weight:800; letter-spacing:-.01em; margin-top:16px; cursor:pointer;
+             box-shadow:0 6px 16px rgba(242,96,127,.32); transition:transform .08s, box-shadow .08s;}
+  button.big:active{transform:translateY(2px); box-shadow:0 3px 10px rgba(242,96,127,.28);}
+  .feedback{text-align:center; font-size:16px; font-weight:700; min-height:26px; margin-top:12px;}
+  .feedback.ok{color:var(--ok);} .feedback.no{color:#d1435f;}
+  .digit-reveal{text-align:center; margin-top:16px; font-size:15px; color:var(--muted);}
+  .digit-reveal b{display:inline-block; font-size:34px; background:var(--grad); color:#fff; width:60px; height:60px; line-height:60px; border-radius:20px; margin-top:8px; box-shadow:0 6px 16px rgba(242,96,127,.3);}
+  .tray{display:flex; justify-content:center; gap:5px; margin:8px 0 2px; flex-wrap:nowrap;}
+  .tray .slot{flex:1 1 0; min-width:0; max-width:36px; height:44px; border-radius:12px; border:2px dashed var(--line); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:var(--accent);}
+  .tray .slot.filled{border-style:solid; border-color:transparent; background:var(--soft); color:var(--ink);}
+
+  /* Wordle */
+  .wgrid{display:grid; grid-template-rows:repeat(6,1fr); gap:6px; justify-content:center; margin:10px 0;}
+  .wrow{display:grid; grid-template-columns:repeat(5,46px); gap:6px;}
+  .wcell{width:46px; height:46px; background:#fff; border:2px solid var(--line); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; text-transform:uppercase;}
+  .wcell.ok{background:var(--ok); color:#fff; border-color:var(--ok);}
+  .wcell.near{background:var(--near); color:#fff; border-color:var(--near);}
+  .wcell.miss{background:var(--miss); color:#fff; border-color:var(--miss);}
+  .kb{margin-top:12px;} .krow{display:flex; justify-content:center; gap:4px; margin-bottom:5px;}
+  .key{flex:1; max-width:30px; height:44px; border:none; border-radius:10px; background:#f2edf7; color:var(--ink); font-size:15px; font-weight:700; cursor:pointer;}
+  .key.wide{max-width:52px; font-size:13px;} .key:active{background:#e5dcf0;}
+
+  .rebus{display:flex; justify-content:center; gap:8px; margin:16px 0; flex-wrap:wrap; align-items:center;}
+  .rtile{background:#fff; border:2px solid var(--line); border-radius:18px; padding:12px 10px; text-align:center; min-width:70px;}
+  .rtile .emo{font-size:34px;} .rtile .sub{font-size:13px; color:var(--muted); margin-top:4px;}
+  .rtile .big-txt{font-size:28px; font-weight:800; letter-spacing:1px; line-height:1.2;}
+  .rtile.plus{font-size:28px; font-weight:800; color:var(--accent); border:none; background:transparent; padding:0 4px; min-width:auto; box-shadow:none;}
+  .strike{text-decoration:line-through; color:#d1435f;}
+  .cipher-box{background:#241a2e; color:#ffc59e; font-family:ui-monospace,monospace; font-size:22px; font-weight:800; letter-spacing:5px; text-align:center; padding:18px 12px; border-radius:18px; margin:14px 0; word-break:break-all;}
+  input.answer{width:100%; padding:15px; font-size:20px; text-align:center; background:#fff; color:var(--ink); border:2px solid var(--line); border-radius:16px; text-transform:uppercase; letter-spacing:2px; margin-top:6px;}
+  input.answer:focus{outline:none; border-color:var(--accent);}
+
+  /* Sudoku */
+  .sgrid{display:grid; grid-template-columns:repeat(6,1fr); gap:2px; max-width:300px; margin:14px auto; background:var(--line); padding:4px; border-radius:16px;}
+  .scell{aspect-ratio:1; background:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; border-radius:8px;}
+  .scell.given{background:var(--soft); color:#7a6b8c;}
+  .scell input{width:100%; height:100%; border:none; text-align:center; font-size:20px; font-weight:800; background:transparent; color:var(--accent);}
+  .scell input:focus{outline:none; background:#fff6f8;}
+  .scell.br{margin-right:5px;} .scell.bb{margin-bottom:5px;}
+  .snum{display:flex; justify-content:center; gap:6px; margin:10px 0;}
+
+  /* Crossword */
+  .xgrid{display:grid; gap:2px; margin:14px auto; justify-content:center;}
+  .xcell{width:28px; height:28px; position:relative; background:var(--soft); border-radius:6px;}
+  .xcell.blank{background:transparent;}
+  .xcell input{width:100%; height:100%; border:1.5px solid #e4dcf0; text-align:center; font-size:15px; font-weight:800; text-transform:uppercase; background:#fff; color:var(--accent); border-radius:6px;}
+  .xcell input:focus{outline:2px solid var(--accent); background:#fff6f8;}
+  .xcell .xnum{position:absolute; top:0; left:2px; font-size:9px; font-weight:700; color:#a99fb0; pointer-events:none;}
+  .xclues{font-size:13px; color:var(--muted); margin-top:8px;}
+  .xclues b{color:var(--accent);}
+  .xclues div{margin:4px 0; line-height:1.4;}
+
+  /* Millionaire */
+  .mstage{background:var(--soft); border-radius:20px; padding:16px 14px; color:var(--ink); margin:12px 0;}
+  .mq{font-size:17px; font-weight:800; letter-spacing:-.01em; line-height:1.35; text-align:center; min-height:48px; margin-bottom:12px;}
+  .mopts{display:grid; gap:9px;}
+  .mopt{display:flex; align-items:center; gap:10px; border:1.5px solid var(--line); border-radius:16px; padding:13px 14px; background:#fff; color:var(--ink); font-size:15px; font-weight:600; cursor:pointer; text-align:left;}
+  .mopt .letter{color:var(--accent); font-weight:800;}
+  .mopt:active{background:#fdf7fb;}
+  .mopt.correct{background:var(--ok); border-color:var(--ok); color:#fff;}
+  .mopt.wrong{background:#e05a72; border-color:#e05a72; color:#fff;}
+  .mopt.correct .letter, .mopt.wrong .letter{color:#fff;}
+  .mladder{display:flex; justify-content:center; flex-wrap:wrap; gap:4px; margin-top:10px; max-height:72px; overflow:auto;}
+  .mstep{font-size:10px; font-weight:800; color:#a99fb0; padding:3px 6px; border-radius:8px; background:#f2edf7;}
+  .mstep.now{background:var(--grad); color:#fff;}
+  .mstep.done{background:#ffd9c9; color:#b5541f;}
+  .mstep.safe{box-shadow:0 0 0 2px var(--ink) inset;}
+  .mlife{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:12px 0 4px;}
+  .mlife button{border:none; border-radius:999px; padding:12px 6px; background:var(--grad); color:#fff; font-size:12px; font-weight:800; cursor:pointer; line-height:1.25; box-shadow:0 4px 12px rgba(242,96,127,.25);}
+  .mlife button:disabled{background:#f2edf7; color:#a99fb0; box-shadow:none; cursor:default;}
+  .mlife button:not(:disabled):active{transform:translateY(1px);}
+  .mpoll{margin-top:10px; font-size:12px; color:var(--muted);}
+  .mpoll .bar{display:flex; align-items:center; gap:6px; margin:4px 0;}
+  .mpoll .fill{height:9px; border-radius:99px; background:var(--grad); min-width:2px;}
+  .mfriend{margin-top:10px; font-size:13.5px; color:#b5541f; font-style:italic; text-align:center;}
+  .mopt.gone{display:none;}
+
+  /* Zuma */
+  .zwrap{margin:14px 0 6px; display:flex; justify-content:center;}
+  #zcanvas{width:320px; max-width:100%; aspect-ratio:1; background:var(--soft); border-radius:22px; touch-action:none; box-shadow:inset 0 0 0 2px var(--line);}
+  .zswap{display:block; width:100%; border:1.5px solid var(--line); border-radius:16px; padding:13px; background:#fff; color:var(--ink); font-size:16px; font-weight:700; cursor:pointer; margin-top:6px;}
+  .zswap:active{background:var(--soft);}
+  .zend{font-size:28px; margin-left:auto;}
+
+  /* Quiz */
+  .qopts{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px;}
+  .qopt{border:1.5px solid var(--line); border-radius:16px; padding:16px 6px; font-size:16px; font-weight:700; background:#fff; color:var(--ink); cursor:pointer; transition:transform .08s;}
+  .qopt.picked{background:var(--ink); border-color:var(--ink); color:#fff;}
+  #quiz-go:disabled{opacity:.4; box-shadow:none;}
+  .qopt:active{transform:translateY(2px);}
+  .qopt.correct{background:var(--ok); border-color:var(--ok); color:#fff;}
+  .qopt.wrong{background:#e05a72; border-color:#e05a72; color:#fff;}
+  .qprog{text-align:center; font-size:14px; color:var(--muted); margin-top:10px;}
+
+  /* Lock */
+  .lock{display:flex; justify-content:center; gap:6px; margin:18px 0; flex-wrap:nowrap;}
+  .lock input{flex:1 1 0; min-width:0; max-width:46px; height:58px; text-align:center; font-size:24px; font-weight:800; background:#fff; color:var(--ink); border:2px solid var(--line); border-radius:16px;}
+  .lock input:focus{outline:none; border-color:var(--accent);}
+  .final-gift{text-align:center;} .final-gift .big-emo{font-size:64px;}
+  .confetti{font-size:22px; letter-spacing:4px; text-align:center;}
+  /* ТЕСТ: кнопка пропуска (потом удалить) */
+  #testskip{position:fixed; right:12px; bottom:12px; z-index:50; background:rgba(36,26,46,.88); color:#fff; border:none; border-radius:999px; padding:10px 16px; font-size:13px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.22); cursor:pointer; display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section class="screen active" id="s-intro">
+    <div class="paws">🐾 🐾 🐾</div>
+    <div class="card">
+      <h1>Путешествие по воспоминаниям</h1>
+      <div class="rita"><div class="face dog"></div><div class="bubble"><b>Привет, это Рита!</b> Я поведу тебя сквозь твою жизнь — от родника детства до задней парты в педучилище. За каждое воспоминание получишь <b>цифру</b>. Собери их все и открой финальный замок. 🔒</div></div>
+      <p style="text-align:center; color:var(--muted); font-size:14px;">Головоломки непростые — но ты же их любишь 😉</p>
+      <button class="big" onclick="go('s-wordle')">Начать 🐾</button>
+    </div>
+  </section>
+
+  <!-- WORDLE -->
+  <section class="screen" id="s-wordle">
+    <div class="paws" id="w-round">Слово 1 из 3</div>
+    <div class="card">
+      <h2>Три слова</h2>
+      <div style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:4px;"><b style="color:var(--ok)">зелёный</b> — на месте · <b style="color:var(--near)">жёлтый</b> — есть, но не там<br>Только <b>существительные в ед. числе</b> (реальные слова)</div>
+      <div class="wgrid" id="wgrid"></div>
+      <div class="feedback" id="wfb"></div>
+      <div class="kb" id="kb"></div>
+      <div id="w-done" style="display:none;"><div class="digit-reveal">Твоя цифра:<br><b id="w-digit"></b></div><button class="big" onclick="go('s-rebus')">Дальше 🐾</button></div>
+    </div>
+  </section>
+
+  <!-- REBUS -->
+  <section class="screen" id="s-rebus">
+    <div class="paws">Воспоминание 2 · Двор тёти Таи</div>
+    <div class="card">
+      <h2>Ребус</h2>
+      <div class="rita"><div class="face dog"></div><div class="bubble">Классический ребус из трёх картинок. Готовых слогов нет — читай по смыслу и сложи слитно.</div></div>
+      <div class="rebus">
+        <div class="rtile"><div class="emo">🧍</div></div>
+        <div class="rtile plus">+</div>
+        <div class="rtile"><div class="emo">⭕</div></div>
+        <div class="rtile plus">+</div>
+        <div class="rtile"><div class="emo">🏎️🏁</div></div>
+      </div>
+      <div class="hint">Только атмосфера, не разгадка: двор тёти Таи, юность, потом еле стояли на ногах.</div>
+      <input class="answer" id="rebus-in" placeholder="одно слово" autocomplete="off" maxlength="12">
+      <button class="big" onclick="checkRebus()">Проверить</button>
+      <div class="feedback" id="rebus-fb"></div>
+      <div id="rebus-done" style="display:none;"><div class="digit-reveal">Твоя цифра:<br><b id="rebus-digit"></b></div><button class="big" onclick="go('s-cipher')">Дальше 🐾</button></div>
+    </div>
+  </section>
+
+  <!-- CIPHER -->
+  <section class="screen" id="s-cipher">
+    <div class="paws">Воспоминание 3 · Тайная комната</div>
+    <div class="card">
+      <h2>Шифр позиции</h2>
+      <div class="rita"><div class="face dog"></div><div class="bubble">Отец подарил тебе набор для работы с плёнкой в темноте. В коробочке — зашифрованное слово. Угадать «по смыслу» нельзя: нужна расшифровка.</div></div>
+      <div class="cipher-box" id="cipher-text"></div>
+      <div class="hint"><b>Правило:</b> каждая буква исходного слова сдвинута <b>вперёд</b> по алфавиту на номер своей позиции (1-я буква +1, 2-я +2, 3-я +3… Ё считается отдельной буквой). Сдвинь каждую букву <b>назад</b> на тот же номер и получи существительное.</div>
+      <input class="answer" id="cipher-in" placeholder="расшифрованное слово" autocomplete="off" maxlength="12">
+      <button class="big" onclick="checkCipher()">Проверить</button>
+      <div class="feedback" id="cipher-fb"></div>
+      <div id="cipher-done" style="display:none;"><div class="digit-reveal">Твоя цифра:<br><b id="cipher-digit"></b></div><button class="big" onclick="go('s-sudoku')">Дальше 🐾</button></div>
+    </div>
+  </section>
+
+  <!-- SUDOKU -->
+  <section class="screen" id="s-sudoku">
+    <div class="paws">Воспоминание 4 · Твоё любимое</div>
+    <div class="card">
+      <h2>Судоку 6×6</h2>
+      <div class="rita"><div class="face dog"></div><div class="bubble">Ты обожаешь судоку — так вот тебе на максималках: открыто всего <b>12 цифр</b>. В каждой строке, столбце и блоке 2×3 должны стоять <b>1–6</b> без повторов. Придётся подумать 😏</div></div>
+      <div class="sgrid" id="sgrid"></div>
+      <button class="big" onclick="checkSudoku()">Проверить</button>
+      <div class="feedback" id="sudoku-fb"></div>
+      <div id="sudoku-done" style="display:none;"><div class="digit-reveal">Твоя цифра:<br><b id="sudoku-digit"></b></div><button class="big" onclick="go('s-crossword')">Дальше 🐾</button></div>
+    </div>
+  </section>
+
+  <!-- CROSSWORD -->
+  <section class="screen" id="s-crossword">
+    <div class="paws">Воспоминание 5 · Кроссворд</div>
+    <div class="card">
+      <h2>Криптокроссворд</h2>
+      <div class="rita"><div class="face dog"></div><div class="bubble">Подсказки — загадки и каламбуры, не прямые определения. Пересечения помогут. Одно неверное слово — и сетка не сойдётся 🧠</div></div>
+      <div class="xgrid" id="xgrid"></div>
+      <div class="xclues" id="xclues"></div>
+      <button class="big" onclick="checkCrossword()">Проверить</button>
+      <div class="feedback" id="cross-fb"></div>
+      <div id="cross-done" style="display:none;"><div class="digit-reveal">Твоя цифра:<br><b id="cross-digit"></b></div><button class="big" onclick="go('s-zuma')">Дальше 🐾</button></div>
+    </div>
+  </section>
+
+  <!-- ZUMA -->
+  <section class="screen" id="s-zuma">
+    <div class="paws" id="z-level">Уровень 1 из 3</div>
+    <div class="card">
+      <h2>Рита-защитница</h2>
+      <div class="rita"><div class="face dog"></div><div class="bubble">Рита в центре. <b>3 уровня:</b> 1-й короткий, 2-й уже сложный, 3-й — на максимуме. Тап по кольцу — выстрел, тап по Рите — сменить шар. Собери 3+ одного цвета!</div></div>
+      <div class="zwrap"><canvas id="zcanvas" width="320" height="320"></canvas></div>
+      <button class="zswap" type="button" onclick="zSwap()" id="z-swap-btn">⇄ Сменить шар</button>
+      <div class="feedback" id="zuma-fb"></div>
+      <button class="big" id="zuma-restart" onclick="startZuma()" style="display:none;">Ещё раз 🐾</button>
+      <div id="zuma-done" style="display:none;"><div class="digit-reveal">Твоя цифра:<br><b id="zuma-digit"></b></div><button class="big" onclick="go('s-millionaire')">Дальше 🐾</button></div>
+    </div>
+  </section>
+
+  <!-- MILLIONAIRE -->
+  <section class="screen" id="s-millionaire">
+    <div class="paws" id="m-prog">Вопрос 1 из 30</div>
+    <div class="card">
+      <h2>Кто хочет стать миллионером?</h2>
+      <div class="rita" id="m-intro"><div class="face dog"></div><div class="bubble">30 вопросов на чистую эрудицию — про твою жизнь тут не спрашивают, только знания. Лёгких нет. Есть <b>три подсказки</b>, как в телеигре. Вопросы <b>10</b> и <b>20</b> — несгораемые: возьмёшь их — при ошибке откатишься только к ним, а подсказки вернутся. Готова?</div></div>
+      <div class="hint" id="m-hint" style="display:none;">🛡 Несгораемые рубежи — вопросы <b>10</b> и <b>20</b> (обведены на лестнице).</div>
+      <div class="mlife" id="m-life">
+        <button type="button" id="m-5050" onclick="use5050()">50:50</button>
+        <button type="button" id="m-friend" onclick="useFriend()">Звонок другу</button>
+        <button type="button" id="m-poll" onclick="usePoll()">Помощь зала</button>
+      </div>
+      <div class="mstage">
+        <div class="mq" id="m-q"></div>
+        <div class="mopts" id="m-opts"></div>
+        <div class="mfriend" id="m-friend-msg" style="display:none;"></div>
+        <div class="mpoll" id="m-poll-box" style="display:none;"></div>
+      </div>
+      <div class="mladder" id="m-ladder"></div>
+      <div class="feedback" id="m-fb"></div>
+      <button class="big" id="m-restart" onclick="millRetry()" style="display:none;">Начать заново 🔁</button>
+      <div id="m-done" style="display:none;"><div class="digit-reveal">Твоя цифра:<br><b id="m-digit"></b></div><button class="big" onclick="go('s-quiz')">Дальше 🐾</button></div>
+    </div>
+  </section>
+
+  <!-- QUIZ: семья — отдельный блок после миллионера -->
+  <section class="screen" id="s-quiz">
+    <div class="paws">Наташа, Юля или Рита?</div>
+    <div class="card">
+      <h2>Наташа, Юля или Рита?</h2>
+      <div class="rita"><div class="face dog"></div><div class="bubble">Раунд про нас троих. Отметь, <b>про кого</b> это — можно выбрать <b>несколько имён</b> сразу, иногда это про двоих, а иногда про всю компанию 😅 Потом жми «Ответить».</div></div>
+      <div id="quiz-q" style="font-size:18px; font-weight:700; text-align:center; min-height:52px; margin:8px 0;"></div>
+      <div class="qopts" id="quiz-opts"></div>
+      <button class="big" id="quiz-go" onclick="submitQuiz()" disabled>Ответить</button>
+      <div class="qprog" id="quiz-prog"></div>
+      <div class="feedback" id="quiz-fb"></div>
+      <div id="quiz-done" style="display:none;"><div class="digit-reveal">Твоя цифра:<br><b id="quiz-digit"></b></div><button class="big" onclick="go('s-lock')">К финалу 🐾</button></div>
+    </div>
+  </section>
+
+  <!-- LOCK -->
+  <section class="screen" id="s-lock">
+    <div class="paws">🔒 Финальный замок</div>
+    <div class="card">
+      <h2>Собери код</h2>
+      <div class="rita"><div class="face dog"></div><div class="bubble">Ты прошла все воспоминания! Введи цифры, что собрала по дороге (они здесь, ниже 👇), и замок откроется.</div></div>
+      <div class="tray" id="tray"></div>
+      <div class="lock" id="lock-inputs"></div>
+      <button class="big" onclick="checkLock()">Открыть 🔓</button>
+      <div class="feedback" id="lock-fb"></div>
+    </div>
+  </section>
+
+  <!-- WIN -->
+  <section class="screen" id="s-win">
+    <div class="paws">🎉 🐾 🎉 🐾 🎉</div>
+    <div class="card final-gift">
+      <div class="confetti">✨🎊✨🎊✨</div>
+      <div class="big-emo">🎁</div>
+      <h1>Ты прошла квест!</h1>
+      <p>Ты снова прошла путь длиною в целую жизнь — от родника и клетки с «самбо» до задней парты и любимой Риты.</p>
+      <p style="font-size:20px; font-weight:800; color:var(--accent); margin-top:16px;">Последний ключ — у Юли.<br>Попроси у неё штрихкод, чтобы забрать подарок! 🎁</p>
+      <p style="margin-top:14px;">А Юля сейчас во Вьетнаме — и привезёт тебе оттуда ещё один подарок. 🌴✈️</p>
+      <div class="rita" style="margin-top:18px;"><div class="face dog"></div><div class="bubble">P.S. Мы очень тебя любим. С любовью, твои девочки и Рита. 🐾</div></div>
+    </div>
+  </section>
+
+  <button id="testskip" onclick="doTestSkip()">Пропустить (тест) ⏭</button>
+</div>
+
+<script>
+/* ===== порядок игр и их цифры ===== */
+const GAMES=[
+  {key:'wordle',digit:7},{key:'rebus',digit:2},{key:'cipher',digit:5},
+  {key:'sudoku',digit:3},{key:'crossword',digit:4},{key:'zuma',digit:8},
+  {key:'millionaire',digit:6},{key:'quiz',digit:9}
+];
+const LOCK_CODE=GAMES.map(g=>g.digit).join('');
+const state={digits:{}};
+
+/* ===== ТЕСТ: пропуск уровня (потом удалить блок + кнопку #testskip) ===== */
+const FLOW={
+  's-wordle':['wordle','s-rebus'], 's-rebus':['rebus','s-cipher'],
+  's-cipher':['cipher','s-sudoku'], 's-sudoku':['sudoku','s-crossword'],
+  's-crossword':['crossword','s-zuma'], 's-zuma':['zuma','s-millionaire'],
+  's-millionaire':['millionaire','s-quiz'], 's-quiz':['quiz','s-lock']
+};
+function doTestSkip(){
+  const active=document.querySelector('.screen.active'); if(!active)return;
+  const f=FLOW[active.id]; if(!f)return;
+  state.digits[f[0]]=GAMES.find(g=>g.key===f[0]).digit;
+  go(f[1]);
+}
+
+/* ===== схематичный цвергпинчер (чёрно-рыжий, стоячие уши) ===== */
+const DOG_SVG=`<svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" aria-label="Рита, цвергпинчер">
+  <!-- хвост трубой -->
+  <path d="M88 78 Q108 70 104 52 Q100 48 96 56 Q92 68 84 74 Z" fill="#1a1714"/>
+  <!-- корпус: компактный квадратный -->
+  <ellipse cx="58" cy="88" rx="28" ry="26" fill="#1a1714"/>
+  <!-- два рыжих треугольника на груди -->
+  <path d="M48 78 L54 102 L42 98 Z" fill="#c45e1a"/>
+  <path d="M68 78 L78 98 L66 102 Z" fill="#c45e1a"/>
+  <!-- шея -->
+  <ellipse cx="58" cy="62" rx="14" ry="12" fill="#1a1714"/>
+  <!-- задние лапы -->
+  <path d="M36 98 Q32 118 34 128 L42 128 Q44 112 46 100 Z" fill="#1a1714"/>
+  <path d="M70 100 Q72 118 74 128 L82 128 Q84 116 80 98 Z" fill="#1a1714"/>
+  <ellipse cx="38" cy="130" rx="7" ry="3.5" fill="#c45e1a"/>
+  <ellipse cx="78" cy="130" rx="7" ry="3.5" fill="#c45e1a"/>
+  <!-- передние лапы длинные прямые -->
+  <rect x="46" y="100" width="7" height="28" rx="3.5" fill="#1a1714"/>
+  <rect x="63" y="100" width="7" height="28" rx="3.5" fill="#1a1714"/>
+  <path d="M46 120 h7 v10 a3.5 3.5 0 0 1 -7 0 Z" fill="#c45e1a"/>
+  <path d="M63 120 h7 v10 a3.5 3.5 0 0 1 -7 0 Z" fill="#c45e1a"/>
+  <!-- голова: клиновидная, не круглая -->
+  <ellipse cx="58" cy="44" rx="22" ry="20" fill="#1a1714"/>
+  <!-- стоячие V-уши высоко -->
+  <path d="M28 46 L34 6 L50 38 Z" fill="#1a1714"/>
+  <path d="M88 46 L86 6 L66 38 Z" fill="#1a1714"/>
+  <path d="M32 42 L36 14 L48 36 Z" fill="#c45e1a"/>
+  <path d="M84 42 L82 14 L70 36 Z" fill="#c45e1a"/>
+  <!-- рыжие «брови» над глазами -->
+  <ellipse cx="46" cy="34" rx="5" ry="3.2" fill="#c45e1a"/>
+  <ellipse cx="70" cy="34" rx="5" ry="3.2" fill="#c45e1a"/>
+  <!-- щёки / челюсть рыжие -->
+  <path d="M36 48 Q42 62 58 64 Q74 62 80 48 Q74 58 58 60 Q42 58 36 48 Z" fill="#c45e1a"/>
+  <!-- морда клином -->
+  <ellipse cx="58" cy="56" rx="11" ry="9" fill="#c45e1a"/>
+  <!-- глаза тёмные овальные -->
+  <ellipse cx="46" cy="42" rx="4.2" ry="5" fill="#0a0908"/>
+  <ellipse cx="70" cy="42" rx="4.2" ry="5" fill="#0a0908"/>
+  <circle cx="47.2" cy="40.5" r="1.3" fill="#fff"/>
+  <circle cx="71.2" cy="40.5" r="1.3" fill="#fff"/>
+  <!-- чёрный нос -->
+  <ellipse cx="58" cy="52" rx="5" ry="3.8" fill="#0a0908"/>
+  <circle cx="56.2" cy="51.2" r="0.9" fill="#fff" opacity=".5"/>
+  <!-- рот -->
+  <path d="M58 55.5 Q58 62 52 63.5 M58 55.5 Q58 62 64 63.5" stroke="#5a2e10" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+</svg>`;
+document.querySelectorAll('.rita .face.dog').forEach(f=>f.innerHTML=DOG_SVG);
+
+function go(id){
+  if(typeof zStop==='function') zStop();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='s-wordle') startWordle();
+  if(id==='s-sudoku') buildSudoku();
+  if(id==='s-crossword') buildCrossword();
+  if(id==='s-zuma') startZuma();
+  if(id==='s-millionaire') startMillionaire();
+  if(id==='s-quiz') startQuiz();
+  if(id==='s-lock') buildLock();
+  document.getElementById('testskip').style.display=FLOW[id]?'block':'none'; /* ТЕСТ */
+}
+function award(key,elId,digitElId,doneId,fbId,msg){
+  state.digits[key]=GAMES.find(g=>g.key===key).digit;
+  const fb=document.getElementById(fbId); fb.textContent=msg; fb.className='feedback ok';
+  document.getElementById(digitElId).textContent=state.digits[key];
+  document.getElementById(doneId).style.display='block';
+}
+
+/* ===== WORDLE ===== */
+/* Ответы и словарь: существительные ед.ч., им.п., 5 букв */
+const WORDS=[{w:"САМБО"},{w:"ШКОЛА"},{w:"ДУРАК"}];
+const WDICT=new Set(("АБЗАЦ АВТОР АГЕНТ АДРЕС АЗАРТ АКТИВ АКУЛА АЛМАЗ АНОНС АРЕНА АРБУЗ АРХИВ АТАКА АФИША БАГАЖ БАЛЕТ БАНАН БАНКА БАРЖА БАТОН БЕКОН БЕРЕГ БИЛЕТ БИСЕР БЛЮДО БОЧКА БУБЕН БУГОР БУКВА БУКЕТ БУТОН ВАГОН ВАЛЕТ ВАЛЬС ВАННА ВДОВА ВЕДРО ВЕНОК ВЕРБА ВЕСЛО ВЕСНА ВЕТЕР ВЕТКА ВИЗИТ ВИЛКА ВИШНЯ ВЛАГА ВОБЛА ВОДКА ВОЛНА ВОРОН ВЫБОР ВЫДОХ ВЫХОД ГАЗОН ГАРЕМ ГЕРОЙ ГЛАВА ГЛИНА ГОРОД ГОСТЬ ГРАНЬ ГРИВА ГРОЗА ГРУША ГУАШЬ ДЕВИЗ ДЕКОР ДИВАН ДИЕТА ДОБРО ДОЖДЬ ДОСКА ДРАКА ДРОБЬ ДУПЛО ДУРАК ДЫМКА ДЫРКА ЖАЖДА ЖАТВА ЖЕРДЬ ЖИЛЕТ ЖИРАФ ЗАБОР ЗАВОД ЗАГАР ЗАГОН ЗАКАТ ЗАКОН ЗАМОК ЗАНОС ЗАПАД ЗАПАХ ЗАПАС ЗАРЯД ЗАСОЛ ЗАХОД ЗВЕНО ЗЕБРА ЗЕМЛЯ ЗЕРНО ЗНАМЯ ИГРОК ИДЕАЛ ИЗГИБ ИЗЛОМ ИКОНА ИСХОД КАБАН КАЗАК КАКАО КАМЕЯ КАНАТ КАПЛЯ КАРАТ КАРТА КАССА КАТЕР КЕФИР КИОСК КИСТЬ КЛАДЬ КЛЕТЬ КНИГА КОЖУХ КОКОН КОЛОС КОМАР КОМОД КОНУС КОРОБ КОСТЬ КОФТА КРЕДО КРЕСТ КРОВЬ КРУПА КРЫЛО КРЫША КУЗОВ КУКЛА КУЛАК КУПОЛ КУРАЖ КУСОК ЛАДАН ЛАМПА ЛАПША ЛАСКА ЛЕНТА ЛЕСКА ЛИНЗА ЛОДКА ЛОЖКА ЛОПУХ ЛОТОК ЛЫЖНЯ МАГИЯ МАЗОК МАЙКА МАЛЫШ МАНГО МАРКА МАСКА МАСЛО МАФИЯ МЕДИК МЕСТО МЕТОД МЕЧТА МИНУС МИСКА МОЗГИ МОЛВА МОЛОТ МОНАХ МОРОЗ МОТОР МУМИЯ МУСОР МЫСЛЬ МЯТЕЖ НАБОР НАВЕС НАКАЗ НАМЕК НАПОР НАРОД НАРЯД НАСОС НАУКА НАЦИЯ НЕВОД НЕДУГ НЕФТЬ НИТКА НОЖКА НОРМА НОСОК НОЧКА ОБМЕН ОБРАЗ ОБРЫВ ОБУВЬ ОВРАГ ОГОНЬ ОРДЕН ОРДЕР ОСЕНЬ ОСИНА ОСКАЛ ОСТОВ ОТВЕТ ОТГУЛ ОТДЫХ ОТЗЫВ ОТКАЗ ОТКОС ОТКУП ОТЛИВ ОХОТА ПАКЕТ ПАЛАЧ ПАЛЕЦ ПАРТА ПАРУС ПАСТА ПАЧКА ПЕВЕЦ ПЕПЕЛ ПЕСНЯ ПЕТУХ ПЕЧКА ПИЛОТ ПИРАТ ПИРОГ ПИТОН ПЛАТО ПЛЕМЯ ПЛЕЧО ПЛИТА ПЛОТЬ ПОГОН ПОДОЛ ПОЕЗД ПОЖАР ПОЗОР ПОКОЙ ПОЛЕТ ПОЛКА ПОРОГ ПОРОХ ПОСОЛ ПОСОХ ПОТОК ПОЧТА ПОЭМА ПРАВО ПРИНЦ ПРОБА ПРОЗА ПТИЦА ПУДРА ПУЛЬТ ПУНКТ ПУШКА ПЧЕЛА РАДАР РАДИО РАЙОН РАМКА РАНЕЦ РАУНД РЕБУС РЕЛЬС РЕЧКА РОБОТ РОДНЯ РОЛИК РОМАН РУБЛЬ РУКАВ РУЛЕТ РУЧЕЙ РЫБАК САБЛЯ САДОК САЗАН САЛАТ САЛОН САЛЮТ САМБА САМБО САМКА САПОГ САРАЙ САТИН САХАР СВЕЧА СВИТА СЕАНС СЕВЕР СЕКТА СЕМЬЯ СИЛОС СИРОП СКАЛА СКУЛА СЛАВА СЛЕЗА СМОЛА СОВЕТ СОКОЛ СОСНА СОСУД СПИРТ СПОРТ СРЕДА СТВОЛ СТЕНА СТИЛЬ СТОЛБ СТРАХ СТРУЯ СУДНО СУЕТА СУМКА СУРОК СФЕРА СХЕМА СЦЕНА СЫРОК ТАБЛО ТАЙГА ТАЙНА ТАНЕЦ ТЕАТР ТЕЗИС ТЕКСТ ТЕПЛО ТИРАЖ ТОВАР ТОЛПА ТОМАТ ТОННА ТОРБА ТРАВА ТРУБА ТУМАН ТУПИК ТУФЛЯ ТЫКВА УГОЛЬ УКЛАД УКРОП УЛИЦА УСПЕХ ФАНАТ ФЕРМА ФИНИШ ФЛОРА ФОКУС ФОРМА ФОРУМ ФРАЗА ФРОНТ ФРУКТ ХАЛВА ЦАПЛЯ ЦЕНТР ЦИФРА ЧАЙКА ЧЕХОЛ ЧИСЛО ЧУЛОК ШАЙБА ШАЛАШ ШАХТА ШКОЛА ШЛАНГ ШЛЯПА ШОРТЫ ШПИОН ШПОРА ШРИФТ ШТОРА ШТУКА ШУТКА ЩЕПКА ЭКРАН ЭПОХА ЭСКИЗ ЭТИКА ЮНОША ЯГОДА ЯКОРЬ ЯРЛЫК ЯСЕНЬ")
+  .split(/\s+/).filter(w=>w.length===5).map(w=>w.replace(/Ё/g,'Е')));
+WORDS.forEach(o=>WDICT.add(o.w.replace(/Ё/g,'Е')));
+let wIdx=0,wRow=0,wCol=0,wDone=false,WANSWER=WORDS[0].w;
+const KB_ROWS=["ЙЦУКЕНГШЩЗХЪ","ФЫВАПРОЛДЖЭ","ЯЧСМИТЬБЮ"];
+const wgrid=document.getElementById('wgrid');
+for(let r=0;r<6;r++){const row=document.createElement('div');row.className='wrow';for(let c=0;c<5;c++){const cell=document.createElement('div');cell.className='wcell';cell.id='w'+r+c;row.appendChild(cell);}wgrid.appendChild(row);}
+const kb=document.getElementById('kb');
+KB_ROWS.forEach((row,i)=>{const div=document.createElement('div');div.className='krow';
+  if(i===2){const e=document.createElement('button');e.className='key wide';e.textContent='⏎';e.onclick=wEnter;div.appendChild(e);}
+  row.split('').forEach(ch=>{const b=document.createElement('button');b.className='key';b.textContent=ch;b.onclick=()=>wType(ch);div.appendChild(b);});
+  if(i===2){const b=document.createElement('button');b.className='key wide';b.textContent='⌫';b.onclick=wBack;div.appendChild(b);}
+  kb.appendChild(div);});
+function wNorm(s){return s.toUpperCase().replace(/Ё/g,'Е');}
+function wType(ch){if(wDone||wCol>=5)return;document.getElementById('w'+wRow+wCol).textContent=ch;wCol++;}
+function wBack(){if(wDone||wCol<=0)return;wCol--;document.getElementById('w'+wRow+wCol).textContent='';}
+function startWordle(){wIdx=0;loadWord();}
+function loadWord(){
+  WANSWER=WORDS[wIdx].w; wRow=0; wCol=0; wDone=false;
+  document.getElementById('w-round').textContent='Слово '+(wIdx+1)+' из '+WORDS.length;
+  const fb=document.getElementById('wfb'); fb.textContent='Только существительные в ед. числе'; fb.className='feedback';
+  document.getElementById('w-done').style.display='none';
+  for(let r=0;r<6;r++)for(let c=0;c<5;c++){const cell=document.getElementById('w'+r+c);cell.textContent='';cell.className='wcell';}
+}
+function wNextOrDone(msg){
+  if(wIdx<WORDS.length-1){
+    const fb=document.getElementById('wfb'); fb.textContent=msg+' → следующее слово'; fb.className='feedback ok';
+    setTimeout(()=>{wIdx++;loadWord();},1300);
+  }else{
+    award('wordle','wfb','w-digit','w-done','wfb','Все три слова взяты! 🎉');
+  }
+}
+function wEnter(){
+  if(wDone)return;
+  if(wCol<5){const el=document.getElementById('wfb');el.textContent='Нужно 5 букв';el.className='feedback no';return;}
+  const guess=[...Array(5)].map((_,c)=>document.getElementById('w'+wRow+c).textContent).join('');
+  if(!WDICT.has(wNorm(guess))){
+    const el=document.getElementById('wfb');
+    el.textContent='Нужно существующее существительное в единственном числе';
+    el.className='feedback no';
+    return;
+  }
+  const ans=wNorm(WANSWER).split('');const g=wNorm(guess).split('');
+  const res=Array(5).fill('miss');const used=Array(5).fill(false);
+  for(let c=0;c<5;c++)if(g[c]===ans[c]){res[c]='ok';used[c]=true;}
+  for(let c=0;c<5;c++){if(res[c]==='ok')continue;for(let k=0;k<5;k++)if(!used[k]&&g[c]===ans[k]){res[c]='near';used[k]=true;break;}}
+  for(let c=0;c<5;c++)document.getElementById('w'+wRow+c).classList.add(res[c]);
+  if(wNorm(guess)===wNorm(WANSWER)){wDone=true;wNextOrDone('Верно!');return;}
+  wRow++;wCol=0;
+  if(wRow>=6){wDone=true;const el=document.getElementById('wfb');el.textContent='Было: '+WANSWER;el.className='feedback no';setTimeout(()=>wNextOrDone('Было: '+WANSWER),1200);}
+}
+
+/* ===== REBUS ===== */
+function checkRebus(){
+  const v=document.getElementById('rebus-in').value.trim().toUpperCase().replace(/\s/g,'').replace(/Ё/g,'Е');
+  if(v==='САМОГОН')award('rebus','rebus-fb','rebus-digit','rebus-done','rebus-fb','Верно! 🧍+⭕+гонка → САМОГОН 🥴');
+  else{const fb=document.getElementById('rebus-fb');fb.textContent='Не то. Три картинки = три куска одного слова.';fb.className='feedback no';}
+}
+
+/* ===== CIPHER: сдвиг на номер позиции ===== */
+const CIPHER_ALPHA="АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+const CIPHER_PLAIN="ФИКСАЖ"; // фотохимия: закрепитель плёнки
+function posCipher(s,dir){
+  return s.split('').map((ch,i)=>{
+    const idx=CIPHER_ALPHA.indexOf(ch);
+    if(idx<0)return ch;
+    const sh=(i+1)*dir;
+    return CIPHER_ALPHA[(idx+sh%CIPHER_ALPHA.length+CIPHER_ALPHA.length)%CIPHER_ALPHA.length];
+  }).join('');
+}
+document.getElementById('cipher-text').textContent=posCipher(CIPHER_PLAIN,1);
+function checkCipher(){
+  const v=document.getElementById('cipher-in').value.trim().toUpperCase().replace(/[^А-ЯЁ]/g,'');
+  if(v.replace(/Ё/g,'Е')===CIPHER_PLAIN.replace(/Ё/g,'Е'))award('cipher','cipher-fb','cipher-digit','cipher-done','cipher-fb','Расшифровано! 🎞');
+  else{const fb=document.getElementById('cipher-fb');fb.textContent='Не сходится. Сдвинь каждую букву назад на 1,2,3… по порядку.';fb.className='feedback no';}
+}
+
+/* ===== SUDOKU 6x6 ===== */
+const SUD_SOL=[
+ [1,2,3,4,5,6],[4,5,6,1,2,3],[2,3,1,5,6,4],
+ [5,6,4,2,3,1],[3,1,2,6,4,5],[6,4,5,3,1,2]];
+/* всего 12 открытых цифр — реально сложно */
+const SUD_GIVEN=[[0,0],[0,4],[1,2],[1,5],[2,1],[2,5],[3,0],[3,4],[4,0],[4,3],[5,1],[5,5]];
+let sudBuilt=false;
+function isGiven(r,c){return SUD_GIVEN.some(b=>b[0]===r&&b[1]===c);}
+function buildSudoku(){
+  if(sudBuilt)return; sudBuilt=true;
+  const g=document.getElementById('sgrid');
+  for(let r=0;r<6;r++)for(let c=0;c<6;c++){
+    const cell=document.createElement('div');cell.className='scell';
+    if(c===2)cell.classList.add('br'); if(r===1||r===3)cell.classList.add('bb');
+    if(isGiven(r,c)){cell.classList.add('given');cell.textContent=SUD_SOL[r][c];}
+    else{
+      const inp=document.createElement('input');inp.inputMode='numeric';inp.maxLength=1;inp.id='s'+r+c;
+      inp.oninput=()=>{inp.value=inp.value.replace(/[^1-6]/g,'');};
+      cell.appendChild(inp);
+    }
+    g.appendChild(cell);
+  }
+}
+function readSud(){
+  const grid=[];
+  for(let r=0;r<6;r++){const row=[];for(let c=0;c<6;c++){
+    if(isGiven(r,c))row.push(SUD_SOL[r][c]);
+    else{const v=document.getElementById('s'+r+c).value;row.push(v?parseInt(v,10):0);}
+  }grid.push(row);}
+  return grid;
+}
+function sudGroupOk(nums){return nums.every(n=>n>=1&&n<=6)&&new Set(nums).size===6;}
+function sudFail(m){const fb=document.getElementById('sudoku-fb');fb.textContent=m;fb.className='feedback no';}
+function checkSudoku(){
+  const grid=readSud();
+  for(let r=0;r<6;r++)for(let c=0;c<6;c++)if(grid[r][c]===0){sudFail('Заполни все клетки цифрами 1–6.');return;}
+  for(let r=0;r<6;r++)if(!sudGroupOk(grid[r])){sudFail('Где-то повтор в строке. Проверь.');return;}
+  for(let c=0;c<6;c++){const col=[];for(let r=0;r<6;r++)col.push(grid[r][c]);if(!sudGroupOk(col)){sudFail('Где-то повтор в столбце. Проверь.');return;}}
+  for(let br=0;br<3;br++)for(let bc=0;bc<2;bc++){const bl=[];for(let r=0;r<2;r++)for(let c=0;c<3;c++)bl.push(grid[br*2+r][bc*3+c]);if(!sudGroupOk(bl)){sudFail('Где-то повтор в блоке 2×3. Проверь.');return;}}
+  award('sudoku','sudoku-fb','sudoku-digit','sudoku-done','sudoku-fb','Идеально! 🧩');
+}
+
+/* ===== ZUMA (классика: выстрел, смена шара, откат, притяжение, комбо) ===== */
+const ZCOLORS=['#f2607f','#4a86e0','#35b0a7','#f0b429','#8b6cf0','#ff8a5c'];
+const ZLEVELS=[
+  // 1: короткий + быстрые шары
+  {colors:3, pool:5, start:4, speed:20, spawnGap:0.55},
+  // 2: как бывший «сложный»
+  {colors:5, pool:18, start:8, speed:26, spawnGap:0.48},
+  // 3: ещё сложнее
+  {colors:6, pool:28, start:11, speed:32, spawnGap:0.40}
+];
+let zLevel=0;
+let zc,zctx,zW,zH,zCx,zCy;
+let zPath=[], zPathLen=0;
+let zTrain=[];
+let zPool=0, zPoolTotal=0, zPalette=[], zSpeed=0, zSpawnGap=1, zSinceSpawn=0;
+let zCur=null, zNext=null, zShot=null, zAim=-Math.PI/2;
+let zRun=false, zRAF=null, zPrev=0;
+let zReverseT=0;
+const ZR=13, ZSPACING=29, ZTOUCH=ZSPACING+2.5, ZRECOIL=0.55, ZREV_SPEED=70;
+
+function zBuildPath(){
+  zPath=[]; const r0=30, b=6.2, dth=0.16, thMax=(Math.min(zW,zH)/2-14-r0)/b;
+  for(let th=0; th<=thMax; th+=dth){const r=r0+b*th; zPath.push({x:zCx+r*Math.cos(th), y:zCy+r*Math.sin(th)});}
+  let acc=0; zPath[0].d=0;
+  for(let i=1;i<zPath.length;i++){const a=zPath[i-1],c=zPath[i];acc+=Math.hypot(c.x-a.x,c.y-a.y);zPath[i].d=acc;}
+  zPathLen=acc;
+}
+function zPosAt(d){
+  if(d<=0)return {x:zPath[0].x,y:zPath[0].y};
+  if(d>=zPathLen)return {x:zPath[zPath.length-1].x,y:zPath[zPath.length-1].y};
+  let lo=0,hi=zPath.length-1;
+  while(lo+1<hi){const m=(lo+hi)>>1; if(zPath[m].d<d)lo=m; else hi=m;}
+  const a=zPath[lo],c=zPath[hi],t=(d-a.d)/((c.d-a.d)||1);
+  return {x:a.x+(c.x-a.x)*t, y:a.y+(c.y-a.y)*t};
+}
+function zBallPos(i){return zPosAt(zTrain[i].d);}
+function zRandColor(avoid){let c;do{c=zPalette[Math.floor(Math.random()*zPalette.length)];}while(zPalette.length>1&&c===avoid);return c;}
+function zPickShot(){const present=[...new Set(zTrain.map(b=>b.c))];const pool=present.length?present:zPalette;return pool[Math.floor(Math.random()*pool.length)];}
+function zSwap(){ if(!zRun||zShot||zCur==null||zNext==null)return; const t=zCur; zCur=zNext; zNext=t; }
+function zTouching(i,j){ return Math.abs(zTrain[j].d-zTrain[i].d)<=ZTOUCH*(j-i)+0.5; }
+function zProgressUI(){
+  const el=document.getElementById('z-level');
+  if(!el)return;
+  if(zPool>0) el.textContent='Уровень '+(zLevel+1)+' из 3 · запас '+zPool+'/'+zPoolTotal;
+  else el.textContent='Уровень '+(zLevel+1)+' из 3 · добей змейку! ('+zTrain.length+')';
+}
+
+function startZuma(){
+  zc=document.getElementById('zcanvas'); zctx=zc.getContext('2d');
+  zW=zc.width; zH=zc.height; zCx=zW/2; zCy=zH/2;
+  zBuildPath();
+  const L=ZLEVELS[zLevel];
+  zPalette=ZCOLORS.slice(0,L.colors); zSpeed=L.speed; zSpawnGap=L.spawnGap;
+  zPoolTotal=L.pool; zPool=L.pool;
+  zSinceSpawn=0; zShot=null; zAim=-Math.PI/2; zReverseT=0;
+  zTrain=[];
+  const startN=Math.min(L.start||6, zPool);
+  for(let i=0;i<startN;i++){
+    const prev=zTrain.length?zTrain[zTrain.length-1].c:null;
+    const pairChance=zLevel===0?0.45:zLevel===1?0.3:0.15;
+    const c=(zTrain.length && Math.random()<pairChance)? zTrain[zTrain.length-1].c : zRandColor(prev);
+    zTrain.push({c, d:zPathLen-(startN-i)*ZSPACING}); zPool--;
+  }
+  zCur=zPickShot(); zNext=zPickShot();
+  zProgressUI();
+  const fb=document.getElementById('zuma-fb'); fb.textContent=''; fb.className='feedback';
+  document.getElementById('zuma-restart').style.display='none';
+  document.getElementById('zuma-done').style.display='none';
+  zRun=true; zPrev=performance.now();
+  cancelAnimationFrame(zRAF); zRAF=requestAnimationFrame(zLoop);
+}
+function zLoop(now){ if(!zRun)return; const dt=Math.min(0.05,(now-zPrev)/1000); zPrev=now; zUpdate(dt); zDraw(); zRAF=requestAnimationFrame(zLoop); }
+
+function zUpdate(dt){
+  if(zReverseT>0) zReverseT-=dt;
+
+  // победа: запас кончился и на дорожке никого
+  if(zTrain.length===0 && zPool===0 && !zShot){ zumaWin(); return; }
+
+  if(zTrain.length>0){
+    const headSp=(zReverseT>0)? -ZREV_SPEED : zSpeed;
+    zTrain[0].d -= headSp*dt;
+    if(zTrain[0].d>zPathLen) zTrain[0].d=zPathLen;
+    if(zTrain[0].d<=0){ zumaFail(); return; }
+
+    for(let i=1;i<zTrain.length;i++){
+      const minD=zTrain[i-1].d+ZSPACING;
+      const gap=zTrain[i].d-zTrain[i-1].d;
+      if(gap>ZSPACING+0.5){
+        let nd=zTrain[i].d - Math.max(zSpeed*5, 140)*dt;
+        if(nd<=minD){ zTrain[i].d=minD; zResolveAtJunction(i-1); }
+        else zTrain[i].d=nd;
+      } else {
+        zTrain[i].d=minD;
+      }
+    }
+  }
+
+  // спавн ТОЛЬКО из конечного запаса zPool (не бесконечно)
+  zSinceSpawn+=dt;
+  if(zPool>0){
+    const empty=zTrain.length===0;
+    const gap=empty?0.15:zSpawnGap; // если дорожка пуста — сразу докинуть из запаса
+    if(zSinceSpawn>=gap){
+      const last=zTrain.length?zTrain[zTrain.length-1]:null;
+      if(empty || !last || last.d<=zPathLen-ZSPACING){
+        zSinceSpawn=0;
+        const prev=last?last.c:null;
+        zTrain.push({c:zRandColor(prev), d:zPathLen});
+        zPool--;
+        zProgressUI();
+      }
+    }
+  } else {
+    zProgressUI();
+  }
+
+  if(zShot){
+    zShot.x+=zShot.vx*dt; zShot.y+=zShot.vy*dt;
+    let hit=-1,hd=1e9;
+    for(let i=0;i<zTrain.length;i++){const p=zBallPos(i);const dd=Math.hypot(p.x-zShot.x,p.y-zShot.y);if(dd<ZR*2.05 && dd<hd){hd=dd;hit=i;}}
+    if(hit>=0){
+      let insertIdx=hit;
+      if(hit+1<zTrain.length){
+        const hp=zBallPos(hit), nxt=zBallPos(hit+1);
+        const dHit=Math.hypot(hp.x-zShot.x,hp.y-zShot.y);
+        const dNxt=Math.hypot(nxt.x-zShot.x,nxt.y-zShot.y);
+        insertIdx = dNxt<dHit ? hit+1 : hit;
+      } else {
+        insertIdx=hit+1;
+      }
+      const baseD=insertIdx===0
+        ? Math.max(0, zTrain[0].d-ZSPACING)
+        : (insertIdx>=zTrain.length ? zTrain[zTrain.length-1].d+ZSPACING : zTrain[insertIdx].d);
+      zTrain.splice(insertIdx,0,{c:zShot.color, d:baseD});
+      for(let k=insertIdx+1;k<zTrain.length;k++){
+        const need=zTrain[k-1].d+ZSPACING;
+        if(zTrain[k].d<need) zTrain[k].d=need;
+      }
+      for(let k=insertIdx-1;k>=0;k--){
+        const maxD=zTrain[k+1].d-ZSPACING;
+        if(zTrain[k].d>maxD) zTrain[k].d=maxD;
+      }
+      zResolveMatches();
+      zShot=null;
+      zProgressUI();
+      if(zTrain.length===0 && zPool===0){ zumaWin(); return; }
+    }
+    else if(zShot.x<-20||zShot.x>zW+20||zShot.y<-20||zShot.y>zH+20){
+      zShot=null;
+    }
+  }
+}
+
+/** Лопнуть группы 3+ только среди физически сомкнутых шаров; откат + комбо при смыкании */
+function zResolveMatches(){
+  let popped=false;
+  let guard=0;
+  while(guard++<40){
+    let found=false;
+    for(let i=0;i<zTrain.length;){
+      let j=i;
+      while(j+1<zTrain.length && zTrain[j+1].c===zTrain[i].c && zTouching(j,j+1)) j++;
+      if(j-i+1>=3){
+        const n=j-i+1;
+        zTrain.splice(i,n);
+        // откат головы (как Reverse на короткое время)
+        zReverseT=Math.max(zReverseT, ZRECOIL);
+        for(let k=0;k<i;k++) zTrain[k].d=Math.min(zPathLen-(zTrain.length-1-k)*ZSPACING, zTrain[k].d+n*ZSPACING*0.35);
+        popped=true; found=true; break;
+      } else i=j+1;
+    }
+    if(!found) break;
+  }
+  return popped;
+}
+function zResolveAtJunction(frontIdx){
+  // стык frontIdx | frontIdx+1 только что сомкнулся
+  if(frontIdx<0||frontIdx+1>=zTrain.length)return;
+  if(zTrain[frontIdx].c!==zTrain[frontIdx+1].c)return;
+  zResolveMatches();
+}
+
+function zShoot(px,py){
+  if(!zRun||zShot||!zCur)return;
+  const dx=px-zCx, dy=py-zCy, mag=Math.hypot(dx,dy)||1, sp=380;
+  zShot={x:zCx,y:zCy,vx:dx/mag*sp,vy:dy/mag*sp,color:zCur}; zAim=Math.atan2(dy,dx);
+  zCur=zNext; zNext=zPickShot(); // как в классике: сразу виден следующий
+}
+function zDrawBall(x,y,color,r){
+  r=r||ZR;
+  zctx.beginPath(); zctx.arc(x,y,r,0,7); zctx.fillStyle=color; zctx.fill();
+  const g=zctx.createRadialGradient(x-4,y-4,1,x,y,r);
+  g.addColorStop(0,'rgba(255,255,255,.55)'); g.addColorStop(.45,'rgba(255,255,255,0)');
+  zctx.fillStyle=g; zctx.beginPath(); zctx.arc(x,y,r,0,7); zctx.fill();
+  zctx.strokeStyle='rgba(0,0,0,.18)'; zctx.lineWidth=1; zctx.stroke();
+}
+function zDraw(){
+  zctx.clearRect(0,0,zW,zH);
+  zctx.strokeStyle='rgba(122,94,58,.16)'; zctx.lineWidth=ZR*2+4; zctx.lineCap='round'; zctx.beginPath();
+  for(let i=0;i<zPath.length;i++){const p=zPath[i]; i?zctx.lineTo(p.x,p.y):zctx.moveTo(p.x,p.y);} zctx.stroke();
+  for(let i=zTrain.length-1;i>=0;i--){const p=zBallPos(i); zDrawBall(p.x,p.y,zTrain[i].c);}
+  zctx.strokeStyle='rgba(61,43,31,.30)'; zctx.lineWidth=2; zctx.setLineDash([5,6]); zctx.beginPath();
+  zctx.moveTo(zCx,zCy); zctx.lineTo(zCx+Math.cos(zAim)*150,zCy+Math.sin(zAim)*150); zctx.stroke(); zctx.setLineDash([]);
+  // Рита-цвергпинчер в центре
+  zctx.fillStyle='#1a1714';
+  zctx.beginPath(); zctx.moveTo(zCx-16,zCy-6); zctx.lineTo(zCx-12,zCy-28); zctx.lineTo(zCx-2,zCy-10); zctx.closePath(); zctx.fill();
+  zctx.beginPath(); zctx.moveTo(zCx+16,zCy-6); zctx.lineTo(zCx+12,zCy-28); zctx.lineTo(zCx+2,zCy-10); zctx.closePath(); zctx.fill();
+  zctx.fillStyle='#c45e1a';
+  zctx.beginPath(); zctx.moveTo(zCx-13,zCy-8); zctx.lineTo(zCx-11,zCy-22); zctx.lineTo(zCx-4,zCy-10); zctx.closePath(); zctx.fill();
+  zctx.beginPath(); zctx.moveTo(zCx+13,zCy-8); zctx.lineTo(zCx+11,zCy-22); zctx.lineTo(zCx+4,zCy-10); zctx.closePath(); zctx.fill();
+  zctx.fillStyle='#1a1714'; zctx.beginPath(); zctx.arc(zCx,zCy,20,0,7); zctx.fill();
+  zctx.fillStyle='#c45e1a'; zctx.beginPath(); zctx.ellipse(zCx,zCy+6,12,8,0,0,7); zctx.fill();
+  zctx.fillStyle='#c45e1a'; zctx.beginPath(); zctx.ellipse(zCx-8,zCy-6,4,2.5,0,0,7); zctx.fill();
+  zctx.beginPath(); zctx.ellipse(zCx+8,zCy-6,4,2.5,0,0,7); zctx.fill();
+  zctx.fillStyle='#0a0908'; zctx.beginPath(); zctx.ellipse(zCx-7,zCy-2,3,3.5,0,0,7); zctx.fill();
+  zctx.beginPath(); zctx.ellipse(zCx+7,zCy-2,3,3.5,0,0,7); zctx.fill();
+  zctx.beginPath(); zctx.ellipse(zCx,zCy+4,3.5,2.8,0,0,7); zctx.fill();
+  // текущий шар у пасти + превью следующего (маленький справа)
+  if(zCur) zDrawBall(zCx+Math.cos(zAim)*26, zCy+Math.sin(zAim)*26, zCur);
+  if(zNext){
+    const nx=zCx+38, ny=zCy+28;
+    zctx.fillStyle='rgba(255,255,255,.55)'; zctx.beginPath(); zctx.arc(nx,ny,11,0,7); zctx.fill();
+    zDrawBall(nx,ny,zNext,8);
+  }
+  if(zShot) zDrawBall(zShot.x,zShot.y,zShot.color);
+}
+function zStop(){ zRun=false; cancelAnimationFrame(zRAF); }
+function zumaWin(){
+  zStop();
+  if(zLevel<2){
+    zLevel++;
+    const fb=document.getElementById('zuma-fb'); fb.textContent='Уровень пройден! Дальше сложнее 🐾'; fb.className='feedback ok';
+    setTimeout(startZuma,1200);
+  }else{
+    zLevel=0;
+    award('zuma','zuma-fb','zuma-digit','zuma-done','zuma-fb','Все 3 уровня взяты! Рита горда 🐕🎉');
+  }
+}
+function zumaFail(){
+  zStop();
+  const fb=document.getElementById('zuma-fb'); fb.textContent='Змейка доползла до центра! Попробуй ещё 🐾'; fb.className='feedback no';
+  document.getElementById('zuma-restart').style.display='block';
+}
+(function(){
+  const cv=document.getElementById('zcanvas'); if(!cv)return;
+  function pt(e){const r=cv.getBoundingClientRect();const t=e.touches&&e.touches[0]?e.touches[0]:e;return {x:(t.clientX-r.left)*(cv.width/r.width), y:(t.clientY-r.top)*(cv.height/r.height)};}
+  cv.addEventListener('pointermove',e=>{if(!zRun)return;const p=pt(e);zAim=Math.atan2(p.y-zCy,p.x-zCx);});
+  cv.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    if(!zRun)return;
+    const p=pt(e);
+    // тап по Рите / превью — смена шара (как пробел / ПКМ в классике)
+    if(Math.hypot(p.x-zCx,p.y-zCy)<34 || Math.hypot(p.x-(zCx+38),p.y-(zCy+28))<18){ zSwap(); return; }
+    zAim=Math.atan2(p.y-zCy,p.x-zCx);
+    zShoot(p.x,p.y);
+  });
+  window.addEventListener('keydown',e=>{
+    if(!zRun)return;
+    if(e.code==='Space'||e.key===' '){ e.preventDefault(); zSwap(); }
+  });
+})();
+
+/* ===== QUIZ: Наташа / Юля / Рита — отдельный блок после миллионера ===== */
+// мультивыбор: correct — точный набор имён, лишнее и недостающее одинаково неверны
+const QUIZ=[
+  {q:'Дольше всех спит по утрам', correct:['Юля']},
+  {q:'Боится грозы и салютов', correct:['Рита']},
+  {q:'Трёт нос ладонью снизу вверх', correct:['Наташа']},
+  {q:'Не моет за собой чашку после еды', correct:['Наташа','Юля','Рита']},
+  {q:'В отпуске первым делом заказывает коктейль', correct:['Юля']},
+  {q:'Обижается молча и не объясняет, за что', correct:['Рита']},
+  {q:'Теряет телефон и ключи — ищут всей квартирой', correct:['Наташа','Юля']},
+  {q:'В чужой стране первым делом ищет, где поесть привычного', correct:['Юля']},
+  {q:'Не станет есть, пока еду не порежут на кусочки', correct:['Рита']},
+  {q:'Разбрасывает свои вещи по всей квартире', correct:['Наташа','Юля']},
+  {q:'Просит вкусняшки и первым делом проверяет пакет из магазина', correct:['Наташа','Юля','Рита']}
+];
+const QOPTS=['Наташа','Юля','Рита'];
+let qi=0, qAnswered=false, qPick=new Set();
+function startQuiz(){
+  qi=0;
+  document.getElementById('quiz-done').style.display='none';
+  document.getElementById('quiz-fb').textContent='';
+  document.getElementById('quiz-fb').className='feedback';
+  renderQuiz();
+}
+function renderQuiz(){
+  qAnswered=false; qPick.clear();
+  document.getElementById('quiz-q').textContent=QUIZ[qi].q;
+  document.getElementById('quiz-prog').textContent=(qi+1)+' / '+QUIZ.length;
+  document.getElementById('quiz-fb').textContent='';
+  document.getElementById('quiz-fb').className='feedback';
+  const box=document.getElementById('quiz-opts'); box.innerHTML='';
+  QOPTS.forEach(opt=>{
+    const b=document.createElement('button');
+    b.className='qopt'; b.textContent=opt; b.dataset.name=opt;
+    b.onclick=()=>toggleQuiz(opt,b);
+    box.appendChild(b);
+  });
+  const go=document.getElementById('quiz-go');
+  go.style.display='block'; go.disabled=true; go.textContent='Ответить';
+}
+function toggleQuiz(name,btn){
+  if(qAnswered)return;
+  if(qPick.has(name)){ qPick.delete(name); btn.classList.remove('picked'); }
+  else{ qPick.add(name); btn.classList.add('picked'); }
+  document.getElementById('quiz-go').disabled=qPick.size===0;
+}
+function submitQuiz(){
+  if(qAnswered || !qPick.size)return; qAnswered=true;
+  const right=QUIZ[qi].correct;
+  const ok = qPick.size===right.length && right.every(n=>qPick.has(n));
+  [...document.querySelectorAll('#quiz-opts .qopt')].forEach(b=>{
+    const name=b.dataset.name;
+    b.classList.remove('picked');
+    if(right.includes(name)) b.classList.add('correct');
+    else if(qPick.has(name)) b.classList.add('wrong');
+  });
+  const fb=document.getElementById('quiz-fb');
+  fb.textContent = ok ? 'В точку! ❤️' : 'А это про: '+right.join(' + ');
+  fb.className='feedback '+(ok?'ok':'no');
+  document.getElementById('quiz-go').disabled=true;
+  setTimeout(()=>{
+    qi++;
+    if(qi<QUIZ.length) renderQuiz();
+    else{
+      document.getElementById('quiz-q').textContent='';
+      document.getElementById('quiz-opts').innerHTML='';
+      document.getElementById('quiz-prog').textContent='';
+      document.getElementById('quiz-go').style.display='none';
+      award('quiz','quiz-fb','quiz-digit','quiz-done','quiz-fb','Ты знаешь нас лучше всех ❤️');
+    }
+  },1600);
+}
+
+/* ===== CROSSWORD (крипто/загадки) ===== */
+const XROWS=9, XCOLS=11;
+const XCELLS={
+  '0_1':'Ш',
+  '0_2':'К',
+  '0_3':'О',
+  '0_4':'Л',
+  '0_5':'А',
+  '1_4':'Ю',
+  '1_5':'Л',
+  '1_6':'Я',
+  '2_1':'С',
+  '2_2':'А',
+  '2_3':'М',
+  '2_4':'Б',
+  '2_5':'О',
+  '3_0':'Р',
+  '3_1':'О',
+  '3_2':'Д',
+  '3_3':'Н',
+  '3_4':'И',
+  '3_5':'К',
+  '4_2':'С',
+  '4_3':'А',
+  '4_4':'М',
+  '4_5':'О',
+  '4_6':'Г',
+  '4_7':'О',
+  '4_8':'Н',
+  '5_3':'Б',
+  '5_4':'А',
+  '5_5':'Н',
+  '5_6':'Я',
+  '6_0':'С',
+  '6_1':'Е',
+  '6_2':'М',
+  '6_3':'Ь',
+  '6_4':'Я',
+  '7_4':'Р',
+  '7_5':'И',
+  '7_6':'Т',
+  '7_7':'А',
+  '8_2':'П',
+  '8_3':'Л',
+  '8_4':'Е',
+  '8_5':'Н',
+  '8_6':'К',
+  '8_7':'А'
+};
+const XNUM={ '0_1':1,'1_4':2,'2_1':3,'3_0':4,'4_2':5,'5_3':6,'6_0':7,'7_4':8,'8_2':9,'0_4':10 };
+let xBuilt=false;
+function buildCrossword(){
+  if(xBuilt)return; xBuilt=true;
+  const g=document.getElementById('xgrid');
+  g.style.gridTemplateColumns='repeat('+XCOLS+',28px)';
+  g.querySelectorAll('*').forEach(()=>{});
+  g.innerHTML='';
+  for(let r=0;r<XROWS;r++)for(let c=0;c<XCOLS;c++){
+    const key=r+'_'+c; const cell=document.createElement('div');
+    if(XCELLS[key]){
+      cell.className='xcell';
+      if(XNUM[key]){const n=document.createElement('span');n.className='xnum';n.textContent=XNUM[key];cell.appendChild(n);}
+      const inp=document.createElement('input');inp.maxLength=1;inp.id='x'+key;inp.autocomplete='off';
+      inp.oninput=()=>{inp.value=inp.value.replace(/[^А-Яа-яЁё]/g,'').toUpperCase();};
+      cell.appendChild(inp);
+    }else{cell.className='xcell blank';}
+    g.appendChild(cell);
+  }
+  document.getElementById('xclues').innerHTML=
+    '<div><b>По горизонтали:</b></div>'+
+    '<div>1. Учреждение, где звонок делит жизнь на «до» и «после», а мел весомее скипетра (5).</div>'+
+    '<div>2. Имя, в котором спрятаны и июль, и греческая буква; у носительницы — финальный ключ (3).</div>'+
+    '<div>3. Вид борьбы; слово, однажды открывшее замок клетки на Матросова (5).</div>'+
+    '<div>4. Гидроним детства: там ступни познакомились с простудой (6).</div>'+
+    '<div>5. «Хлебный спирт» двора тёти Таи, прочитанный слева направо (7).</div>'+
+    '<div>6. Парная «отмашка» от мира, где однажды гас свет сознания (4).</div>'+
+    '<div>7. Малая социальная единица: ты + две дочери + одна псина (5).</div>'+
+    '<div>8. Кличка нынешней защитницы породы «король той» (4).</div>'+
+    '<div>9. Носитель скрытого изображения до проявки: отец дал к ней весь набор (6).</div>'+
+    '<div style="margin-top:6px"><b>По вертикали:</b></div>'+
+    '<div>10. Семь букв сверху вниз по клетке №4: эпитет в ж.р., который мы произносим о тебе чаще всего.</div>';
+}
+function checkCrossword(){
+  for(const key in XCELLS){
+    const v=(document.getElementById('x'+key).value||'').toUpperCase().replace('Ё','Е');
+    const need=XCELLS[key].replace('Ё','Е');
+    if(v!==need){const fb=document.getElementById('cross-fb');fb.textContent='Где-то ошибка или пусто. Загадки жёсткие — опирайся на пересечения.';fb.className='feedback no';return;}
+  }
+  award('crossword','cross-fb','cross-digit','cross-done','cross-fb','Сетка сошлась! По вертикали — ЛЮБИМАЯ 💛');
+}
+
+/* ===== MILLIONAIRE: 30 вопросов от простого к сложному + 3 подсказки ===== */
+const MILL=[
+  // только эрудиция: личных вопросов здесь нет — они живут в остальных уровнях
+  // 1–10: разминка (несгораемый рубеж на 10-м)
+  {q:'Какая планета ближе всех к Солнцу?', opts:['Меркурий','Венера','Марс','Земля'], correct:0},
+  {q:'Какая часть речи обозначает признак действия?', opts:['Причастие','Прилагательное','Наречие','Деепричастие'], correct:2},
+  {q:'Какой падеж отвечает на вопросы «кем? чем?»?', opts:['Дательный','Творительный','Родительный','Предложный'], correct:1},
+  {q:'Химический элемент с атомным номером 8?', opts:['Азот','Углерод','Кислород','Фтор'], correct:2},
+  {q:'«Война и мир» по жанру — это…?', opts:['Исторический роман','Семейная хроника','Роман воспитания','Роман-эпопея'], correct:3},
+  {q:'Что измеряется в паскалях?', opts:['Сила','Давление','Работа','Мощность'], correct:1},
+  {q:'Столица Австралии?', opts:['Сидней','Мельбурн','Аделаида','Канберра'], correct:3},
+  {q:'В каком году отменили крепостное право в России?', opts:['1855','1861','1864','1871'], correct:1},
+  {q:'Какой витамин вырабатывается в коже под действием солнца?', opts:['A','C','D','E'], correct:2},
+  {q:'Какого газа больше всего в атмосфере Земли?', opts:['Азот','Кислород','Углекислый газ','Аргон'], correct:0},
+  // 11–20: всерьёз (несгораемый рубеж на 20-м)
+  {q:'Какой химический элемент обозначается символом K?', opts:['Кальций','Кобальт','Кремний','Калий'], correct:3},
+  {q:'2⁹ = ?', opts:['256','512','1024','288'], correct:1},
+  {q:'В каком веке жил Михаил Ломоносов?', opts:['XVI','XVII','XVIII','XIX'], correct:2},
+  {q:'Самая длинная река Европы?', opts:['Дунай','Днепр','Урал','Волга'], correct:3},
+  {q:'Как звали кота из свиты Воланда?', opts:['Бегемот','Азазелло','Коровьев','Абадонна'], correct:0},
+  {q:'В каком году запустили первый искусственный спутник Земли?', opts:['1955','1957','1959','1961'], correct:1},
+  {q:'Чему равна сумма углов выпуклого пятиугольника?', opts:['360°','450°','540°','720°'], correct:2},
+  {q:'Кто из русских писателей был вынужден отказаться от Нобелевской премии?', opts:['Борис Пастернак','Иван Бунин','Михаил Шолохов','Александр Солженицын'], correct:0},
+  {q:'Сколько сантиметров в одном дюйме?', opts:['2,24 см','2,54 см','2,74 см','3,05 см'], correct:1},
+  {q:'Сколько хромосом в соматической клетке человека?', opts:['23','44','46','48'], correct:2},
+  // 21–30: без пощады
+  {q:'Чей это крик души: «Не хочу учиться, хочу жениться»?', opts:['Скотинин','Простаков','Хлестаков','Митрофанушка'], correct:3},
+  {q:'Кто сформулировал три закона движения планет?', opts:['Ньютон','Кеплер','Коперник','Галилей'], correct:1},
+  {q:'Сколько лет на самом деле длилась Столетняя война?', opts:['116','100','108','122'], correct:0},
+  {q:'Как называется закрепление изображения на плёнке после проявки?', opts:['Экспозиция','Фиксаж','Вираж','Ретушь'], correct:1},
+  {q:'Какое море не имеет берегов?', opts:['Мраморное','Эгейское','Красное','Саргассово'], correct:3},
+  {q:'Кто был первым царём из династии Романовых?', opts:['Алексей Михайлович','Михаил Фёдорович','Фёдор Алексеевич','Борис Годунов'], correct:1},
+  {q:'Какой знак ставится в бессоюзном сложном, если вторая часть — причина первой?', opts:['Тире','Точка с запятой','Двоеточие','Запятая'], correct:2},
+  {q:'Как называется наука о грибах?', opts:['Микробиология','Бриология','Лихенология','Микология'], correct:3},
+  {q:'Кто написал оперу «Хованщина»?', opts:['Мусоргский','Бородин','Римский-Корсаков','Глинка'], correct:0},
+  {q:'Кому Пушкин посвятил «Я помню чудное мгновенье»?', opts:['Наталье Гончаровой','Анне Олениной','Анне Керн','Екатерине Бакуниной'], correct:2}
+];
+// несгораемые рубежи: пройдя 10-й и 20-й вопрос, ниже них уже не падаешь
+const SAFE=[9,19];
+function safeCheckpoint(){ return mi>=20?20 : mi>=10?10 : 0; }
+const M_LETTERS=['А','Б','В','Г'];
+let mi=0, mAnswered=false;
+let mLife={ff:true, friend:true, poll:true};
+
+function startMillionaire(){
+  mi=0; mAnswered=false;
+  mLife={ff:true, friend:true, poll:true};
+  document.getElementById('m-restart').style.display='none';
+  document.getElementById('m-done').style.display='none';
+  document.getElementById('m-fb').textContent='';
+  document.getElementById('m-fb').className='feedback';
+  syncLifeBtns();
+  renderMill();
+}
+function millRetry(){
+  mi=safeCheckpoint();
+  mLife={ff:true, friend:true, poll:true};   // на новом заходе подсказки снова при тебе
+  document.getElementById('m-restart').style.display='none';
+  document.getElementById('m-fb').textContent='';
+  document.getElementById('m-fb').className='feedback';
+  renderMill();
+}
+function syncLifeBtns(){
+  document.getElementById('m-5050').disabled=!mLife.ff;
+  document.getElementById('m-friend').disabled=!mLife.friend;
+  document.getElementById('m-poll').disabled=!mLife.poll;
+}
+function renderMill(){
+  mAnswered=false;
+  const Q=MILL[mi];
+  // длинная инструкция — только на первом вопросе, дальше короткая строка про рубежи
+  document.getElementById('m-intro').style.display = mi===0?'':'none';
+  document.getElementById('m-hint').style.display = mi===0?'none':'block';
+  document.getElementById('m-prog').textContent='Вопрос '+(mi+1)+' из '+MILL.length;
+  document.getElementById('m-q').textContent=Q.q;
+  document.getElementById('m-friend-msg').style.display='none';
+  document.getElementById('m-poll-box').style.display='none';
+  const box=document.getElementById('m-opts'); box.innerHTML='';
+  Q.opts.forEach((o,idx)=>{
+    const b=document.createElement('button');
+    b.className='mopt'; b.dataset.idx=String(idx);
+    b.innerHTML='<span class="letter">'+M_LETTERS[idx]+'</span> '+o;
+    b.onclick=()=>answerMill(idx,b);
+    box.appendChild(b);
+  });
+  const l=document.getElementById('m-ladder'); l.innerHTML='';
+  for(let i=0;i<MILL.length;i++){
+    const s=document.createElement('span');
+    s.className='mstep'+(SAFE.includes(i)?' safe':'')+(i<mi?' done':i===mi?' now':'');
+    s.textContent=String(i+1);
+    l.appendChild(s);
+  }
+  document.getElementById('m-fb').textContent='';
+  document.getElementById('m-fb').className='feedback';
+  syncLifeBtns();
+}
+function use5050(){
+  if(!mLife.ff || mAnswered)return;
+  mLife.ff=false; syncLifeBtns();
+  const Q=MILL[mi];
+  const wrong=[0,1,2,3].filter(i=>i!==Q.correct);
+  // убрать два случайных неверных
+  wrong.sort(()=>Math.random()-0.5);
+  const kill=wrong.slice(0,2);
+  [...document.querySelectorAll('#m-opts .mopt')].forEach(b=>{
+    const i=+b.dataset.idx;
+    if(kill.includes(i)){ b.classList.add('gone'); b.onclick=null; }
+  });
+}
+function useFriend(){
+  if(!mLife.friend || mAnswered)return;
+  mLife.friend=false; syncLifeBtns();
+  const Q=MILL[mi];
+  const sure=mi<10? 'уверена' : mi<20? 'почти уверена' : 'не на 100%, но';
+  const msg=document.getElementById('m-friend-msg');
+  msg.style.display='block';
+  msg.textContent='🐶 Рита: «Я '+sure+' — это '+M_LETTERS[Q.correct]+'!»';
+}
+function usePoll(){
+  if(!mLife.poll || mAnswered)return;
+  mLife.poll=false; syncLifeBtns();
+  const Q=MILL[mi];
+  // зал чаще голосует за верный, но на сложных вопросах шумнее
+  const weights=[10,10,10,10];
+  const bonus=mi<10?55:mi<20?40:28;
+  weights[Q.correct]+=bonus;
+  for(let i=0;i<4;i++) if(i!==Q.correct) weights[i]+=Math.floor(Math.random()*12);
+  const sum=weights.reduce((a,b)=>a+b,0);
+  const pcts=weights.map(w=>Math.round(100*w/sum));
+  // поправить сумму до 100
+  pcts[0]+=100-pcts.reduce((a,b)=>a+b,0);
+  const box=document.getElementById('m-poll-box');
+  box.style.display='block';
+  box.innerHTML=pcts.map((p,i)=>'<div class="bar"><span>'+M_LETTERS[i]+'</span><div class="fill" style="width:'+Math.max(p,2)+'%"></div><span>'+p+'%</span></div>').join('');
+}
+function answerMill(idx,btn){
+  if(mAnswered)return; mAnswered=true;
+  const Q=MILL[mi];
+  const btns=[...document.querySelectorAll('#m-opts .mopt')];
+  if(idx===Q.correct){
+    btn.classList.add('correct');
+    setTimeout(()=>{mi++; if(mi<MILL.length)renderMill(); else millWin();},850);
+  }else{
+    btn.classList.add('wrong');
+    const right=btns.find(b=>+b.dataset.idx===Q.correct);
+    if(right) right.classList.add('correct');
+    const cp=safeCheckpoint();
+    const fb=document.getElementById('m-fb');
+    fb.textContent='Увы! Верный — '+M_LETTERS[Q.correct]+'. '+(cp===0
+      ? 'Несгораемый рубеж ещё не взят — начинаем сначала 🔁'
+      : 'Но рубеж на вопросе '+cp+' держит: откат туда, а не в начало 🛡');
+    fb.className='feedback no';
+    const rb=document.getElementById('m-restart');
+    rb.textContent=cp===0?'Начать заново 🔁':'Продолжить с вопроса '+(cp+1)+' 🛡';
+    rb.style.display='block';
+  }
+}
+function millWin(){
+  document.getElementById('m-ladder').innerHTML='';
+  document.getElementById('m-opts').innerHTML='';
+  document.getElementById('m-q').textContent='';
+  document.getElementById('m-friend-msg').style.display='none';
+  document.getElementById('m-poll-box').style.display='none';
+  award('millionaire','m-fb','m-digit','m-done','m-fb','Джекпот! 30 из 30 🏆');
+}
+
+/* ===== LOCK ===== */
+function buildLock(){
+  const tray=document.getElementById('tray');tray.innerHTML='';
+  const box=document.getElementById('lock-inputs');box.innerHTML='';
+  GAMES.forEach((g,i)=>{
+    const slot=document.createElement('div');slot.className='slot';
+    if(state.digits[g.key]!=null){slot.textContent=state.digits[g.key];slot.classList.add('filled');}else slot.textContent='?';
+    tray.appendChild(slot);
+    const inp=document.createElement('input');inp.inputMode='numeric';inp.maxLength=1;inp.id='lk'+i;
+    inp.oninput=()=>{inp.value=inp.value.replace(/[^0-9]/g,'');if(inp.value&&i<GAMES.length-1)document.getElementById('lk'+(i+1)).focus();};
+    box.appendChild(inp);
+  });
+}
+function checkLock(){
+  const code=GAMES.map((g,i)=>document.getElementById('lk'+i).value).join('');
+  const fb=document.getElementById('lock-fb');
+  if(code===LOCK_CODE){fb.textContent='Открыто! 🔓';fb.className='feedback ok';setTimeout(()=>go('s-win'),700);}
+  else{fb.textContent='Не тот код. Цифры — на подносе ☝️';fb.className='feedback no';}
+}
+</script>
+</body>
+</html>
